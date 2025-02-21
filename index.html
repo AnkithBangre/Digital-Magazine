@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Digital Magazine</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 100%;
+        height: 100vh;
+        background: #000000;
+        font-family: 'Roboto', sans-serif;
+        position: relative;
+        overflow: hidden;
+      }
+      .dashboard {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #f7f7f7;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .dashboard h1 {
+        margin-bottom: 30px;
+        color: #134a78;
+      }
+      .book-list {
+        display: flex;
+        gap: 30px;
+      }
+      .book-card {
+        width: 220px;
+        height: 320px;
+        perspective: 1000px;
+      }
+      .book-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+      }
+      .book-card-inner.flipped {
+        transform: rotateY(180deg);
+      }
+      .book-card-front,
+      .book-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border: 2px solid #134a78;
+        border-radius: 10px;
+      }
+      .book-card-front {
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        cursor: pointer;
+      }
+      .book-card-front img {
+        width: 100%;
+        height: auto;
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+      }
+      .book-card-front h2 {
+        font-size: 18px;
+        color: #134a78;
+        text-align: center;
+        margin-top: 8px;
+      }
+      .book-card-front p {
+        font-size: 16px;
+        color: #555;
+        margin: 5px 0 10px 0;
+      }
+      .book-card-back {
+        background: #134a78;
+        color: #fff;
+        transform: rotateY(180deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .book-card-back button {
+        padding: 8px 16px;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+        background: #fff;
+        color: #134a78;
+        cursor: pointer;
+      }
+      .book-card-back button:hover {
+        background: #e0e0e0;
+      }
+      .instruction {
+        position: absolute;
+        top: 20px;
+        left: 50px;
+        font-size: 26px;
+        color: rgba(0, 0, 0, 0.6);
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 15px;
+        padding: 10px 15px;
+        z-index: 100;
+      }
+      .back-btn {
+        position: absolute;
+        top: 20px;
+        right: 50px;
+        padding: 8px 16px;
+        font-size: 16px;
+        background: #134a78;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        z-index: 100;
+      }
+      .book {
+        position: absolute;
+        top: 50px;
+        left: 800px;
+        width: 423.5px;
+        height: 327.5px;
+        transform: translateX(-20%) rotateX(10deg) rotateY(-10deg);
+        transform-style: preserve-3d;
+        perspective: 2000px;
+      }
+      .zoomed {
+        transform: translateX(-20%) rotateX(10deg) rotateY(-10deg) scale(1.5) !important;
+      }
+      .page {
+        position: absolute;
+        width: 211.75px;
+        height: 327.5px;
+        overflow: hidden;
+        padding: 20px;
+        transition: transform 1s;
+      }
+      .page:nth-child(odd) {
+        transform-origin: left center;
+      }
+      .page:nth-child(even) {
+        transform-origin: right center;
+        transform: scaleX(-1) translateX(100%);
+      }
+      .flipped:nth-child(odd) {
+        transform: translateZ(1px) rotateY(-180deg);
+      }
+      .flipped:nth-child(even) {
+        transform: translateZ(1px) scaleX(-1) translateX(100%) rotateY(180deg);
+      }
+      .skeleton {
+        position: absolute;
+        top: 150px;
+        left: 800px;
+        width: 423.5px;
+        height: 327.5px;
+        transform: translateX(-20%);
+        background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+        background-size: 400% 100%;
+        animation: shimmer 2s infinite;
+        border-radius: 4px;
+      }
+      @keyframes shimmer {
+        0% { background-position: -400px 0; }
+        100% { background-position: 400px 0; }
+      }
+      .control-panel {
+        position: absolute;
+        top: 50px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 200;
+      }
+      .control-panel button {
+        padding: 6px 10px;
+        font-size: 14px;
+        border: none;
+        border-radius: 4px;
+        background: #134a78;
+        color: #fff;
+        cursor: pointer;
+      }
+      .control-panel button:hover {
+        background: #0f3a5e;
+      }
+      iframe {
+  position: fixed;
+  bottom: 30px;
+  left: 0;
+  width: 50%;
+  height: 50px;
+  border: none;
+  z-index: 999; 
+}
+
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <audio id="flipSound" src="page-flip-01a.mp3" preload="auto"></audio>
+    
+    <script>
+      function playFlipSound() {
+        document.getElementById("flipSound").play();
+      }
+    </script>
+    
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+      
+      function generatePages(bookTitle, magazineType) {
+        return [
+          {
+            id: 1,
+            type: "cover-front",
+            content: (
+              <div>
+                <h1 style={{ fontSize: "25px", color: "#fff", marginTop: "30px", textTransform: "uppercase" }}>
+                  {bookTitle}
+                </h1>
+                <h2 style={{ fontSize: "24px", color: "#fff" }}>
+                  {magazineType}
+                </h2>
+              </div>
+            )
+          },
+          {
+            id: 2,
+            type: "cover-front",
+            content: null
+          },
+          {
+            id: 3,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 1</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+              </div>
+            )
+          },
+          {
+            id: 4,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 2</p>
+                <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.</p>
+              </div>
+            )
+          },
+          {
+            id: 5,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 3</p>
+                <p>At vero eos et accusamus et iusto odio dignissimos ducimus.</p>
+              </div>
+            )
+          },
+          {
+            id: 6,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 4</p>
+                <p>Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil.</p>
+              </div>
+            )
+          },
+          {
+            id: 7,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 5</p>
+                <p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam.</p>
+              </div>
+            )
+          },
+          {
+            id: 8,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 6</p>
+                <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.</p>
+              </div>
+            )
+          },
+          {
+            id: 9,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 7</p>
+                <p>Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur.</p>
+              </div>
+            )
+          },
+          {
+            id: 10,
+            type: "text-page",
+            content: (
+              <div>
+                <p>{bookTitle} Magazine - Page 8</p>
+                <p>And everywhere, the vibrant pulse of knowledge echoed in every corner.</p>
+              </div>
+            )
+          }
+        ];
+      }
+      
+      function BookCard({ book, onView }) {
+        const [flipped, setFlipped] = useState(false);
+        
+        const handleCardClick = () => {
+          setFlipped(!flipped);
+        };
+        
+        const handleViewClick = (e) => {
+          e.stopPropagation(); 
+          onView(book);
+        };
+        
+        return (
+          <div className="book-card" onClick={handleCardClick}>
+            <div className={`book-card-inner ${flipped ? 'flipped' : ''}`}>
+              <div className="book-card-front">
+                <img src={book.imageUrl} alt={book.title} />
+                <h2>{book.title}</h2>
+                <p>{book.year}</p>
+              </div>
+              <div className="book-card-back">
+                <button onClick={handleViewClick}>View Magazine</button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      function Dashboard({ books, onSelectBook }) {
+        return (
+          <div className="dashboard">
+            <h1 style={{ color: "#134a78" }}>Science Magazines</h1>
+            <h1><a href="https://heyzine.com/flip-book/f15d83262a.html">Heyzine</a></h1>
+            <div className="book-list">
+              {books.map(book => (
+                <BookCard key={book.id} book={book} onView={onSelectBook} />
+              ))}
+            </div>
+          </div>
+        );
+      }
+      
+      function FlipBook({ book, onBack }) {
+        const [currentPage, setCurrentPage] = useState(1);
+        const [loading, setLoading] = useState(true);
+        const [zoom, setZoom] = useState(false);
+        
+        useEffect(() => {
+          const timer = setTimeout(() => setLoading(false), 2000);
+          return () => clearTimeout(timer);
+        }, []);
+        
+        const pages = book.pages;
+        
+        const handleFirstPage = () => {
+          playFlipSound();
+          setCurrentPage(1);
+        };
+        
+        const handlePrevPage = () => {
+          if (currentPage > 1) {
+            playFlipSound();
+            setCurrentPage(currentPage - 2);
+          }
+        };
+        
+        const handleNextPage = () => {
+          if (currentPage < pages.length) {
+            playFlipSound();
+            setCurrentPage(currentPage + 2);
+          }
+        };
+        
+        const handleLastPage = () => {
+          playFlipSound();
+          setCurrentPage(pages.length);
+        };
+        
+        const toggleZoom = () => {
+          setZoom(!zoom);
+        };
+        
+        const toggleFullScreen = () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            }
+          }
+        };
+        
+        const getPageStyle = (index) => {
+          const offset = -index + "px";
+          let transform;
+          if (index % 2 === 1) {
+            transform = "translateZ(" + offset + ")";
+          } else {
+            transform = "translateZ(" + offset + ") scaleX(-1) translateX(100%)";
+          }
+          if (index < currentPage) {
+            const flippedOffset = index + "px";
+            if (index % 2 === 1) {
+              transform = "translateZ(" + flippedOffset + ") rotateY(-180deg)";
+            } else {
+              transform = "translateZ(" + flippedOffset + ") scaleX(-1) translateX(100%) rotateY(180deg)";
+            }
+          }
+          let background = (index === 1 || index === pages.length) ? "#7cb9e8" : "#ffffff";
+          return { transform, background, zIndex: 100 - index };
+        };
+        
+        if (loading) {
+          return <div className="skeleton"></div>;
+        }
+        
+        return (
+          <div>
+            <button className="back-btn" onClick={onBack}>Back to Dashboard</button>
+            <div className="control-panel">
+              <button onClick={handleFirstPage}>First</button>
+              <button onClick={handlePrevPage}>Prev</button>
+              <button onClick={handleNextPage}>Next</button>
+              <button onClick={handleLastPage}>Last</button>
+              <button onClick={toggleZoom}>{zoom ? "Normal" : "Zoom"}</button>
+              <button onClick={toggleFullScreen}>Full Screen</button>
+            </div>
+            <div className={`book ${zoom ? "zoomed" : ""}`}>
+              {pages.map((page, idx) => {
+                const index = idx + 1;
+                const style = getPageStyle(index);
+                const classes = `page ${page.type} ${index < currentPage ? "flipped" : ""}`;
+                return (
+                  <div
+                    key={page.id}
+                    className={classes}
+                    style={style}
+                    onClick={() => {
+                      if (page.id === currentPage && currentPage < pages.length) {
+                        playFlipSound();
+                        setCurrentPage(currentPage + 2);
+                      } else if (page.id === currentPage - 1 && currentPage > 1) {
+                        playFlipSound();
+                        setCurrentPage(currentPage - 2);
+                      }
+                    }}
+                  >
+                    {page.content}
+                  </div>
+                );
+              })}
+            </div>
+            <iframe 
+              src={book.iframeSrc} 
+              style={{ border: "0px solid lightgray", width: "100%", height: "320px", marginBottom: "-7px" }}
+            ></iframe>
+          </div>
+        );
+      }
+      
+      function App() {
+        const [books, setBooks] = useState([
+          {
+            id: 1,
+            title: "Unsung Heroes",
+            year: "June 2023",
+            imageUrl:
+              "https://i0.wp.com/paraminnovation.org/wp-content/uploads/2023/06/science-mag-july-23.png?w=1086&ssl=1",
+            iframeSrc: "https://heyzine.com/flip-book/6f06160d9b9cabf8b448af77594f3c183ab4ee99.pdf",
+            pages: generatePages("Unsung Heroes", "Science Magazines")
+          },
+          {
+            id: 2,
+            title: "Yocto To Yotta",
+            year: "May 2023",
+            imageUrl:
+              "https://i0.wp.com/paraminnovation.org/wp-content/uploads/2023/05/Magazine-May-2023.jpg?w=1086&ssl=1",
+            iframeSrc: "https://heyzine.com/flip-book/dc0f0e554f834acfed8d8b975ca56758ede34e29.pdf",
+            pages: generatePages("Yocto To Yotta", "Science Magazines")
+          },
+          {
+            id: 3,
+            title: "Artificial Intelligence",
+            year: "April 2023",
+            imageUrl:
+              "https://i0.wp.com/paraminnovation.org/wp-content/uploads/2023/05/magazine-Apr-23.png?w=1087&ssl=1",
+            iframeSrc: "https://heyzine.com/flip-book/1e9c3e91602caf33a1f2a086b8030be44f101556.pdf",
+            pages: generatePages("Artificial Intelligence", "Science Magazines")
+          }
+        ]);
+        
+        const [selectedBook, setSelectedBook] = useState(null);
+        
+        const handleSelectBook = (book) => {
+          setSelectedBook(book);
+          setBooks(prevBooks => prevBooks.filter(b => b.id !== book.id));
+        };
+        
+        const handleBack = () => {
+          setSelectedBook(null);
+        };
+        
+        return selectedBook ? (
+          <FlipBook book={selectedBook} onBack={handleBack} />
+        ) : (
+          <Dashboard books={books} onSelectBook={handleSelectBook} />
+        );
+      }
+      
+      ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+  </body>
+</html>
